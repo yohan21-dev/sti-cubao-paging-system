@@ -1,0 +1,77 @@
+version: '3.9'
+
+services:
+  # ─────────────────────────────────────────────
+  # MySQL database
+  # ─────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: sti_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-paging_db}
+      MYSQL_USER: ${DB_USER:-paging_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-paging_pass}
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p${MYSQL_ROOT_PASSWORD:-rootpassword}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - paging_net
+
+  # ─────────────────────────────────────────────
+  # Node.js / Express API + Socket.io server
+  # ─────────────────────────────────────────────
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: sti_server
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${DB_USER:-paging_user}
+      DB_PASSWORD: ${DB_PASSWORD:-paging_pass}
+      DB_NAME: ${DB_NAME:-paging_db}
+      JWT_SECRET: ${JWT_SECRET:-changeme_super_secret_jwt_key_please_change_in_production}
+      PORT: 5000
+      CLIENT_URL: ${CLIENT_URL:-http://localhost}
+    ports:
+      - '5000:5000'
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - paging_net
+
+  # ─────────────────────────────────────────────
+  # React + Vite frontend (served by nginx)
+  # ─────────────────────────────────────────────
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: sti_client
+    restart: unless-stopped
+    ports:
+      - '80:80'
+    depends_on:
+      - server
+    networks:
+      - paging_net
+
+volumes:
+  mysql_data:
+
+networks:
+  paging_net:
+    driver: bridge
