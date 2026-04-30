@@ -51,9 +51,7 @@ router.post(
 
       const pageData = rows[0];
 
-      if (io) {
-        io.to('display').emit('new_page', pageData);
-      }
+      io.to('display').emit('new_page', pageData);
 
       res.status(201).json(pageData);
     } catch (err) {
@@ -128,9 +126,7 @@ router.patch('/:id/resolve', auth, async (req, res) => {
 
     const pageData = rows[0];
 
-    if (io) {
       io.to('display').emit('page_resolved', pageData);
-    }
 
     res.json(pageData);
   } catch (err) {

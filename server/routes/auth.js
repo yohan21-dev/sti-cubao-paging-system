@@ -23,7 +23,7 @@ router.post(
     const { username, password } = req.body;
 
     try {
-      const [rows] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
+      const [rows] = await pool.query('SELECT * FROM users WHERE LOWER(username) = LOWER(?)', [username]);
 
       if (rows.length === 0) {
         return res.status(401).json({ message: 'Invalid credentials.' });
@@ -80,7 +80,7 @@ router.post(
     const { username, password, role = 'staff' } = req.body;
 
     try {
-      const [existing] = await pool.query('SELECT id FROM users WHERE username = ?', [username]);
+      const [existing] = await pool.query('SELECT id FROM users WHERE LOWER(username) = LOWER(?)', [username]);
       if (existing.length > 0) {
         return res.status(409).json({ message: 'Username already exists.' });
       }

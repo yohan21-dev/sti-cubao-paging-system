@@ -30,7 +30,7 @@ router.post(
     const { name, description } = req.body;
 
     try {
-      const [existing] = await pool.query('SELECT id FROM departments WHERE name = ?', [name]);
+      const [existing] = await pool.query('SELECT id FROM departments WHERE LOWER(name) = LOWER(?)', [name]);
       if (existing.length > 0) {
         return res.status(409).json({ message: 'Department already exists.' });
       }
