@@ -1,0 +1,29 @@
+# /etc/systemd/system/pagesys.service
+# Install with:
+#   sudo cp pagesys.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable pagesys
+#   sudo systemctl start pagesys
+
+[Unit]
+Description=STI College Cubao — Faculty Paging System API
+After=network.target mysql.service
+Requires=mysql.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/pagesys/server
+ExecStart=/usr/bin/node index.js
+Restart=on-failure
+RestartSec=5s
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=pagesys
+
+# Environment — override these in /etc/systemd/system/pagesys.service.d/override.conf
+Environment=NODE_ENV=production
+Environment=PORT=3001
+
+[Install]
+WantedBy=multi-user.target
