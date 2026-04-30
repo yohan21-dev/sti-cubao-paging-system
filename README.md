@@ -1,2 +1,3 @@
-# sti-cubao-paging-system
-A web-based faculty paging system for STI College Cubao that allows students to call teachers by department using outside and faculty display screens.
+# STI Cubao Paging System
+
+A web-based paging system for STI College Cubao that helps students find and notify faculty members by department.
