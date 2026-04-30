@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import api from '../api/axios.js';
+import axios from 'axios';
 import { useSocket } from '../hooks/useSocket.js';
+
+// Plain axios (no auth interceptor) — display screen is public
+const publicApi = axios.create({ baseURL: import.meta.env.VITE_API_URL || '' });
+
+function getFullName(page) {
+  return [page.first_name, page.last_name].filter(Boolean).join(' ') || 'Unknown Teacher';
+}
 
 function timeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
@@ -24,6 +31,10 @@ function StatusBadge({ status }) {
 }
 
 function PageEntry({ page, isNew }) {
+  const teacherName = getFullName(page);
+  const deptName = page.department_name || '';
+  const id = page.id;
+
   return (
     <div
       className={`card p-5 transition-all duration-500 ${
@@ -34,24 +45,15 @@ function PageEntry({ page, isNew }) {
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sti-blue to-sti-blue-light flex items-center justify-center flex-shrink-0 shadow-md">
             <span className="text-white font-bold text-sm">
-              {(page.teacher?.name || page.teacherName || '?')
-                .split(' ')
-                .slice(0, 2)
-                .map((n) => n[0])
-                .join('')
-                .toUpperCase()}
+              {((page.first_name?.[0] || '') + (page.last_name?.[0] || '')).toUpperCase() || '?'}
             </span>
           </div>
           <div className="min-w-0">
-            <p className="font-bold text-gray-900 text-base leading-tight">
-              {page.teacher?.name || page.teacherName || 'Unknown Teacher'}
-            </p>
-            <p className="text-sm text-sti-blue font-medium">
-              {page.teacher?.department?.name || page.departmentName || ''}
-            </p>
-            {page.studentName && (
+            <p className="font-bold text-gray-900 text-base leading-tight">{teacherName}</p>
+            <p className="text-sm text-sti-blue font-medium">{deptName}</p>
+            {page.student_name && (
               <p className="text-sm text-gray-500 mt-0.5">
-                <span className="font-medium text-gray-600">From:</span> {page.studentName}
+                <span className="font-medium text-gray-600">From:</span> {page.student_name}
               </p>
             )}
             {page.message && (
@@ -61,7 +63,7 @@ function PageEntry({ page, isNew }) {
         </div>
         <div className="flex flex-col items-end gap-2 flex-shrink-0">
           <StatusBadge status={page.status} />
-          <span className="text-xs text-gray-400">{timeAgo(page.createdAt)}</span>
+          <span className="text-xs text-gray-400">{timeAgo(page.created_at)}</span>
         </div>
       </div>
     </div>
@@ -83,10 +85,13 @@ export default function DisplayScreen() {
 
   const fetchPages = useCallback(async () => {
     try {
-      const res = await api.get('/api/pages?status=pending');
+      // GET /api/pages requires auth; use a token if available, else skip silently
+      const token = localStorage.getItem('sti_admin_token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await publicApi.get('/api/pages?status=pending', { headers });
       setPages(res.data);
     } catch {
-      // silently ignore on display screen
+      // Display screen gracefully starts empty when unauthenticated
     }
   }, []);
 
@@ -103,10 +108,10 @@ export default function DisplayScreen() {
 
     socket.on('new_page', (page) => {
       setPages((prev) => {
-        const exists = prev.some((p) => (p._id || p.id) === (page._id || page.id));
+        const exists = prev.some((p) => p.id === page.id);
         return exists ? prev : [page, ...prev];
       });
-      const id = page._id || page.id;
+      const id = page.id;
       setNewPageIds((prev) => new Set([...prev, id]));
       if (newPageTimeout.current[id]) clearTimeout(newPageTimeout.current[id]);
       newPageTimeout.current[id] = setTimeout(() => {
@@ -118,21 +123,21 @@ export default function DisplayScreen() {
       }, 5000);
     });
 
-    socket.on('page_updated', (updated) => {
+    socket.on('page_resolved', (updated) => {
       setPages((prev) =>
-        prev.map((p) => ((p._id || p.id) === (updated._id || updated.id) ? updated : p))
+        prev.map((p) => (p.id === updated.id ? updated : p))
       );
     });
 
     socket.on('page_deleted', (id) => {
-      setPages((prev) => prev.filter((p) => (p._id || p.id) !== id));
+      setPages((prev) => prev.filter((p) => p.id !== id));
     });
 
     return () => {
       socket.off('connect');
       socket.off('disconnect');
       socket.off('new_page');
-      socket.off('page_updated');
+      socket.off('page_resolved');
       socket.off('page_deleted');
     };
   }, [socketRef]);
@@ -203,9 +208,9 @@ export default function DisplayScreen() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {pendingPages.map((page) => (
               <PageEntry
-                key={page._id || page.id}
+                key={page.id}
                 page={page}
-                isNew={newPageIds.has(page._id || page.id)}
+                isNew={newPageIds.has(page.id)}
               />
             ))}
           </div>

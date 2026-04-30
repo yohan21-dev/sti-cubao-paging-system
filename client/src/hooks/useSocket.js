@@ -13,8 +13,9 @@ export function useSocket(room = null) {
       autoConnect: true,
     });
 
+    // Server only supports joining the 'display' room via 'join_display'
     if (room) {
-      socketRef.current.emit('join', room);
+      socketRef.current.emit('join_display');
     }
 
     return () => {

@@ -67,7 +67,7 @@ export default function StudentPage() {
     setTeacherError('');
     setSearchQuery('');
     try {
-      const url = dept ? `/api/teachers?departmentId=${dept._id || dept.id}` : '/api/teachers';
+      const url = dept ? `/api/teachers?department_id=${dept.id}` : '/api/teachers';
       const res = await api.get(url);
       setTeachers(res.data);
     } catch {
@@ -78,7 +78,7 @@ export default function StudentPage() {
   }, []);
 
   const handleDeptClick = (dept) => {
-    if (selectedDept?._id === dept._id) {
+    if (selectedDept?.id === dept.id) {
       setSelectedDept(null);
       setTeachers([]);
     } else {
@@ -92,9 +92,10 @@ export default function StudentPage() {
     fetchTeachers(null);
   };
 
-  const filteredTeachers = teachers.filter((t) =>
-    t.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTeachers = teachers.filter((t) => {
+    const fullName = [t.first_name, t.last_name].filter(Boolean).join(' ');
+    return fullName.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -144,9 +145,9 @@ export default function StudentPage() {
               </button>
               {departments.map((dept) => (
                 <DepartmentButton
-                  key={dept._id || dept.id}
+                  key={dept.id}
                   dept={dept}
-                  selected={selectedDept?._id === (dept._id || dept.id)}
+                  selected={selectedDept?.id === dept.id}
                   onClick={handleDeptClick}
                 />
               ))}
@@ -159,7 +160,7 @@ export default function StudentPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {departments.map((dept) => (
               <button
-                key={dept._id || dept.id}
+                key={dept.id}
                 onClick={() => handleDeptClick(dept)}
                 className="card p-5 text-left hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-150 group"
               >
@@ -225,7 +226,7 @@ export default function StudentPage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredTeachers.map((teacher) => (
-                  <div key={teacher._id || teacher.id} className="animate-fade-in">
+                  <div key={teacher.id} className="animate-fade-in">
                     <TeacherCard teacher={teacher} onPage={setSelectedTeacher} />
                   </div>
                 ))}

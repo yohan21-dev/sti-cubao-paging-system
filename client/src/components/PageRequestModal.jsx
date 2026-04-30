@@ -1,5 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import api from '../api/axios.js';
+import axios from 'axios';
+
+// Use a plain axios instance so 401 doesn't redirect away from the page
+const rawApi = axios.create({ baseURL: import.meta.env.VITE_API_URL || '' });
+
+function getInitials(t) {
+  return ((t.first_name?.[0] || '') + (t.last_name?.[0] || '')).toUpperCase() || '?';
+}
+function getFullName(t) {
+  return [t.first_name, t.last_name].filter(Boolean).join(' ') || 'Unknown';
+}
 
 export default function PageRequestModal({ teacher, onClose }) {
   const [studentName, setStudentName] = useState('');
@@ -21,9 +31,9 @@ export default function PageRequestModal({ teacher, onClose }) {
     setStatus('loading');
     setErrorMsg('');
     try {
-      await api.post('/api/pages', {
-        teacherId: teacher._id || teacher.id,
-        studentName: studentName.trim() || undefined,
+      await rawApi.post('/api/pages', {
+        teacher_id: teacher.id,
+        student_name: studentName.trim() || undefined,
         message: message.trim() || undefined,
       });
       setStatus('success');
@@ -70,7 +80,7 @@ export default function PageRequestModal({ teacher, onClose }) {
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-2">Page Sent!</h3>
             <p className="text-gray-600">
-              <span className="font-semibold text-sti-blue">{teacher.name}</span> has been paged successfully.
+              <span className="font-semibold text-sti-blue">{getFullName(teacher)}</span> has been paged successfully.
             </p>
             <p className="text-sm text-gray-500 mt-1">They will be notified shortly.</p>
             <button onClick={onClose} className="btn-primary mt-6 w-full">
@@ -82,20 +92,12 @@ export default function PageRequestModal({ teacher, onClose }) {
             {/* Teacher info */}
             <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl mb-5 border border-blue-100">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sti-blue to-sti-blue-light flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold text-xs">
-                  {teacher.name
-                    .split(' ')
-                    .slice(0, 2)
-                    .map((n) => n[0])
-                    .join('')
-                    .toUpperCase()}
-                </span>
+                <span className="text-white font-bold text-xs">{getInitials(teacher)}</span>
               </div>
               <div>
-                <p className="font-semibold text-sti-blue text-sm">{teacher.name}</p>
+                <p className="font-semibold text-sti-blue text-sm">{getFullName(teacher)}</p>
                 <p className="text-xs text-gray-500">
-                  {teacher.position && `${teacher.position} • `}
-                  {teacher.department?.name || teacher.departmentName || ''}
+                  {teacher.department_name || teacher.department?.name || ''}
                 </p>
               </div>
             </div>

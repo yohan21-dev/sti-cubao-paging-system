@@ -79,7 +79,7 @@ function DepartmentsTab() {
   const resetForm = () => { setFormName(''); setFormDesc(''); setEditId(null); setError(''); };
 
   const startEdit = (dept) => {
-    setEditId(dept._id || dept.id);
+    setEditId(dept.id);
     setFormName(dept.name);
     setFormDesc(dept.description || '');
     setError('');
@@ -93,7 +93,7 @@ function DepartmentsTab() {
     try {
       if (editId) {
         const res = await api.put(`/api/departments/${editId}`, { name: formName.trim(), description: formDesc.trim() });
-        setDepartments((prev) => prev.map((d) => (d._id === editId || d.id === editId ? res.data : d)));
+        setDepartments((prev) => prev.map((d) => (d.id === editId ? res.data : d)));
       } else {
         const res = await api.post('/api/departments', { name: formName.trim(), description: formDesc.trim() });
         setDepartments((prev) => [...prev, res.data]);
@@ -109,7 +109,7 @@ function DepartmentsTab() {
   const handleDelete = async (id) => {
     try {
       await api.delete(`/api/departments/${id}`);
-      setDepartments((prev) => prev.filter((d) => (d._id || d.id) !== id));
+      setDepartments((prev) => prev.filter((d) => d.id !== id));
     } catch {
       setError('Failed to delete department.');
     } finally {
@@ -153,14 +153,14 @@ function DepartmentsTab() {
         ) : (
           <ul className="divide-y divide-gray-100">
             {departments.map((dept) => (
-              <li key={dept._id || dept.id} className="px-5 py-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors">
+              <li key={dept.id} className="px-5 py-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors">
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">{dept.name}</p>
                   {dept.description && <p className="text-xs text-gray-500 mt-0.5">{dept.description}</p>}
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => startEdit(dept)} className="text-xs font-medium text-sti-blue hover:underline px-2 py-1 rounded hover:bg-blue-50 transition-colors">Edit</button>
-                  <button onClick={() => setConfirm({ id: dept._id || dept.id, name: dept.name })} className="text-xs font-medium text-red-600 hover:underline px-2 py-1 rounded hover:bg-red-50 transition-colors">Delete</button>
+                  <button onClick={() => setConfirm({ id: dept.id, name: dept.name })} className="text-xs font-medium text-red-600 hover:underline px-2 py-1 rounded hover:bg-red-50 transition-colors">Delete</button>
                 </div>
               </li>
             ))}
@@ -186,7 +186,7 @@ function TeachersTab() {
   const [departments, setDepartments] = useState([]);
   const [filterDept, setFilterDept] = useState('');
   const [loading, setLoading] = useState(true);
-  const [formData, setFormData] = useState({ name: '', position: '', departmentId: '' });
+  const [formData, setFormData] = useState({ first_name: '', last_name: '', email: '', status: 'available', department_id: '' });
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -207,34 +207,43 @@ function TeachersTab() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  const resetForm = () => { setFormData({ name: '', position: '', departmentId: '' }); setEditId(null); setError(''); };
+  const resetForm = () => { setFormData({ first_name: '', last_name: '', email: '', status: 'available', department_id: '' }); setEditId(null); setError(''); };
 
   const startEdit = (t) => {
-    setEditId(t._id || t.id);
+    setEditId(t.id);
     setFormData({
-      name: t.name,
-      position: t.position || '',
-      departmentId: t.department?._id || t.department?.id || t.departmentId || '',
+      first_name: t.first_name || '',
+      last_name: t.last_name || '',
+      email: t.email || '',
+      status: t.status || 'available',
+      department_id: String(t.department_id || ''),
     });
     setError('');
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!formData.name.trim() || !formData.departmentId) return;
+    if (!formData.first_name.trim() || !formData.last_name.trim() || !formData.department_id) return;
     setSaving(true);
     setError('');
+    const payload = {
+      first_name: formData.first_name.trim(),
+      last_name: formData.last_name.trim(),
+      department_id: parseInt(formData.department_id, 10),
+      email: formData.email.trim() || undefined,
+      status: formData.status,
+    };
     try {
       if (editId) {
-        const res = await api.put(`/api/teachers/${editId}`, formData);
-        setTeachers((prev) => prev.map((t) => (t._id === editId || t.id === editId ? res.data : t)));
+        const res = await api.put(`/api/teachers/${editId}`, payload);
+        setTeachers((prev) => prev.map((t) => (t.id === editId ? res.data : t)));
       } else {
-        const res = await api.post('/api/teachers', formData);
+        const res = await api.post('/api/teachers', payload);
         setTeachers((prev) => [...prev, res.data]);
       }
       resetForm();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save teacher.');
+      setError(err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || 'Failed to save teacher.');
     } finally {
       setSaving(false);
     }
@@ -243,7 +252,7 @@ function TeachersTab() {
   const handleDelete = async (id) => {
     try {
       await api.delete(`/api/teachers/${id}`);
-      setTeachers((prev) => prev.filter((t) => (t._id || t.id) !== id));
+      setTeachers((prev) => prev.filter((t) => t.id !== id));
     } catch {
       setError('Failed to delete teacher.');
     } finally {
@@ -252,8 +261,9 @@ function TeachersTab() {
   };
 
   const filtered = teachers.filter((t) => {
-    const matchDept = !filterDept || (t.department?._id || t.department?.id || t.departmentId) === filterDept;
-    const matchSearch = !searchQuery || t.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchDept = !filterDept || String(t.department_id) === filterDept;
+    const fullName = [t.first_name, t.last_name].filter(Boolean).join(' ').toLowerCase();
+    const matchSearch = !searchQuery || fullName.includes(searchQuery.toLowerCase());
     return matchDept && matchSearch;
   });
 
@@ -263,21 +273,34 @@ function TeachersTab() {
       <div className="card p-5">
         <h3 className="font-bold text-gray-900 mb-4">{editId ? 'Edit Teacher' : 'Add Teacher'}</h3>
         <form onSubmit={handleSave} className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-            <input type="text" value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} className="input-field" placeholder="Full name" required disabled={saving} />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+              <input type="text" value={formData.first_name} onChange={(e) => setFormData((p) => ({ ...p, first_name: e.target.value }))} className="input-field" placeholder="First" required disabled={saving} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+              <input type="text" value={formData.last_name} onChange={(e) => setFormData((p) => ({ ...p, last_name: e.target.value }))} className="input-field" placeholder="Last" required disabled={saving} />
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
-            <input type="text" value={formData.position} onChange={(e) => setFormData((p) => ({ ...p, position: e.target.value }))} className="input-field" placeholder="e.g. Instructor I" disabled={saving} />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="email" value={formData.email} onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))} className="input-field" placeholder="teacher@sti.edu" disabled={saving} />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Department *</label>
-            <select value={formData.departmentId} onChange={(e) => setFormData((p) => ({ ...p, departmentId: e.target.value }))} className="input-field" required disabled={saving}>
+            <select value={formData.department_id} onChange={(e) => setFormData((p) => ({ ...p, department_id: e.target.value }))} className="input-field" required disabled={saving}>
               <option value="">Select department</option>
               {departments.map((d) => (
-                <option key={d._id || d.id} value={d._id || d.id}>{d.name}</option>
+                <option key={d.id} value={String(d.id)}>{d.name}</option>
               ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select value={formData.status} onChange={(e) => setFormData((p) => ({ ...p, status: e.target.value }))} className="input-field" disabled={saving}>
+              <option value="available">Available</option>
+              <option value="unavailable">Unavailable</option>
             </select>
           </div>
           {error && <p className="text-red-600 text-sm">{error}</p>}
@@ -297,7 +320,7 @@ function TeachersTab() {
           <select value={filterDept} onChange={(e) => setFilterDept(e.target.value)} className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sti-blue">
             <option value="">All Departments</option>
             {departments.map((d) => (
-              <option key={d._id || d.id} value={d._id || d.id}>{d.name}</option>
+              <option key={d.id} value={String(d.id)}>{d.name}</option>
             ))}
           </select>
           <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search..." className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sti-blue w-36" />
@@ -308,27 +331,30 @@ function TeachersTab() {
           <EmptyState icon="👨‍🏫" title="No teachers found" subtitle="Add teachers using the form." />
         ) : (
           <ul className="divide-y divide-gray-100 max-h-[520px] overflow-y-auto">
-            {filtered.map((t) => (
-              <li key={t._id || t.id} className="px-5 py-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sti-blue to-sti-blue-light flex items-center justify-center flex-shrink-0">
-                    <span className="text-white font-bold text-xs">
-                      {t.name.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase()}
-                    </span>
+            {filtered.map((t) => {
+              const fullName = [t.first_name, t.last_name].filter(Boolean).join(' ');
+              const initials = ((t.first_name?.[0] || '') + (t.last_name?.[0] || '')).toUpperCase();
+              return (
+                <li key={t.id} className="px-5 py-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sti-blue to-sti-blue-light flex items-center justify-center flex-shrink-0">
+                      <span className="text-white font-bold text-xs">{initials || '?'}</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 text-sm">{fullName}</p>
+                      <p className="text-xs text-gray-500">
+                        {t.status === 'unavailable' && <span className="text-amber-600 font-medium">Unavailable · </span>}
+                        {t.department_name || '—'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {t.position ? `${t.position} · ` : ''}{t.department?.name || '—'}
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => startEdit(t)} className="text-xs font-medium text-sti-blue hover:underline px-2 py-1 rounded hover:bg-blue-50 transition-colors">Edit</button>
+                    <button onClick={() => setConfirm({ id: t.id, name: fullName })} className="text-xs font-medium text-red-600 hover:underline px-2 py-1 rounded hover:bg-red-50 transition-colors">Delete</button>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => startEdit(t)} className="text-xs font-medium text-sti-blue hover:underline px-2 py-1 rounded hover:bg-blue-50 transition-colors">Edit</button>
-                  <button onClick={() => setConfirm({ id: t._id || t.id, name: t.name })} className="text-xs font-medium text-red-600 hover:underline px-2 py-1 rounded hover:bg-red-50 transition-colors">Delete</button>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -373,19 +399,19 @@ function PagesTab() {
     if (!socket) return;
     socket.on('new_page', (page) => {
       setPages((prev) => {
-        const exists = prev.some((p) => (p._id || p.id) === (page._id || page.id));
+        const exists = prev.some((p) => p.id === page.id);
         return exists ? prev : [page, ...prev];
       });
     });
-    socket.on('page_updated', (updated) => {
-      setPages((prev) => prev.map((p) => ((p._id || p.id) === (updated._id || updated.id) ? updated : p)));
+    socket.on('page_resolved', (updated) => {
+      setPages((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
     });
     socket.on('page_deleted', (id) => {
-      setPages((prev) => prev.filter((p) => (p._id || p.id) !== id));
+      setPages((prev) => prev.filter((p) => p.id !== id));
     });
     return () => {
       socket.off('new_page');
-      socket.off('page_updated');
+      socket.off('page_resolved');
       socket.off('page_deleted');
     };
   }, [socketRef]);
@@ -393,7 +419,7 @@ function PagesTab() {
   const handleResolve = async (id) => {
     try {
       const res = await api.patch(`/api/pages/${id}/resolve`);
-      setPages((prev) => prev.map((p) => ((p._id || p.id) === id ? res.data : p)));
+      setPages((prev) => prev.map((p) => (p.id === id ? res.data : p)));
     } catch {
       setError('Failed to resolve page.');
     }
@@ -402,7 +428,7 @@ function PagesTab() {
   const handleDelete = async (id) => {
     try {
       await api.delete(`/api/pages/${id}`);
-      setPages((prev) => prev.filter((p) => (p._id || p.id) !== id));
+      setPages((prev) => prev.filter((p) => p.id !== id));
     } catch {
       setError('Failed to delete page.');
     } finally {
@@ -444,26 +470,29 @@ function PagesTab() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filtered.map((page) => (
-                <tr key={page._id || page.id} className="hover:bg-gray-50 transition-colors">
+              {filtered.map((page) => {
+                const teacherName = [page.first_name, page.last_name].filter(Boolean).join(' ') || '—';
+                return (
+                <tr key={page.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-5 py-3.5">
-                    <p className="font-semibold text-gray-900">{page.teacher?.name || page.teacherName || '—'}</p>
-                    <p className="text-xs text-gray-500">{page.teacher?.department?.name || page.departmentName || ''}</p>
+                    <p className="font-semibold text-gray-900">{teacherName}</p>
+                    <p className="text-xs text-gray-500">{page.department_name || ''}</p>
                   </td>
-                  <td className="px-5 py-3.5 text-gray-600">{page.studentName || <span className="text-gray-400 italic">Anonymous</span>}</td>
+                  <td className="px-5 py-3.5 text-gray-600">{page.student_name || <span className="text-gray-400 italic">Anonymous</span>}</td>
                   <td className="px-5 py-3.5 text-gray-500 max-w-[180px] truncate">{page.message || '—'}</td>
                   <td className="px-5 py-3.5"><StatusBadge status={page.status} /></td>
-                  <td className="px-5 py-3.5 text-gray-400 whitespace-nowrap">{timeAgo(page.createdAt)}</td>
+                  <td className="px-5 py-3.5 text-gray-400 whitespace-nowrap">{timeAgo(page.created_at)}</td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center justify-end gap-2">
                       {page.status === 'pending' && (
-                        <button onClick={() => handleResolve(page._id || page.id)} className="text-xs font-medium text-green-700 hover:underline px-2 py-1 rounded hover:bg-green-50 transition-colors">Resolve</button>
+                        <button onClick={() => handleResolve(page.id)} className="text-xs font-medium text-green-700 hover:underline px-2 py-1 rounded hover:bg-green-50 transition-colors">Resolve</button>
                       )}
-                      <button onClick={() => setConfirm({ id: page._id || page.id })} className="text-xs font-medium text-red-600 hover:underline px-2 py-1 rounded hover:bg-red-50 transition-colors">Delete</button>
+                      <button onClick={() => setConfirm({ id: page.id })} className="text-xs font-medium text-red-600 hover:underline px-2 py-1 rounded hover:bg-red-50 transition-colors">Delete</button>
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
