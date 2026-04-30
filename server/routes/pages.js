@@ -126,7 +126,7 @@ router.patch('/:id/resolve', auth, async (req, res) => {
 
     const pageData = rows[0];
 
-      io.to('display').emit('page_resolved', pageData);
+    io.to('display').emit('page_resolved', pageData);
 
     res.json(pageData);
   } catch (err) {
