@@ -1,9 +1,10 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --sti-green:  #006837;
+  --sti-blue:  #0b5793;
+  --sti-green: #00992e;
   --sti-yellow: #FDB813;
-  --sti-dark:   #003320;
+  --sti-dark:   #070033;
   --sti-light:  #E8F5EE;
   --gray-50:    #F9FAFB;
   --gray-100:   #F3F4F6;
@@ -65,7 +66,7 @@ img { display: block; }
 .spinner {
   width: 36px; height: 36px;
   border: 3px solid var(--gray-200);
-  border-top-color: var(--sti-green);
+  border-top-color: var(--sti-blue);
   border-radius: 50%;
   animation: spin .7s linear infinite;
   margin: auto;
@@ -83,7 +84,7 @@ img { display: block; }
   pointer-events: none;
 }
 .toast.error  { background: var(--red); }
-.toast.success{ background: var(--sti-green); }
+.toast.success{ background: var(--sti-blue); }
 
 /* ── Modal backdrop ── */
 .modal-backdrop {
@@ -113,7 +114,7 @@ img { display: block; }
   background: var(--gray-50); width: 100%;
 }
 .form-input:focus, .form-select:focus, .form-textarea:focus {
-  border-color: var(--sti-green); background: #fff;
+  border-color: var(--sti-blue); background: #fff;
 }
 .form-textarea { resize: vertical; min-height: 80px; }
 
@@ -124,7 +125,7 @@ img { display: block; }
   font-size: .9rem; font-weight: 600; transition: all var(--transition);
   white-space: nowrap;
 }
-.btn-primary   { background: var(--sti-green); color: #fff; }
+.btn-primary   { background: var(--sti-blue); color: #fff; }
 .btn-primary:hover  { background: var(--sti-dark); }
 .btn-secondary { background: var(--gray-100); color: var(--gray-700); border: 1.5px solid var(--gray-200); }
 .btn-secondary:hover{ background: var(--gray-200); }

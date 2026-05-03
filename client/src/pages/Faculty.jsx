@@ -55,13 +55,13 @@ function PageAlert({ entry, onAcknowledge, onDone }) {
     <div style={{
       background:'#fff', borderRadius:16, padding:24,
       boxShadow:'0 8px 32px rgba(0,0,0,.18)',
-      border:'3px solid var(--sti-green)',
+      border:'3px solid var(--sti-blue)',
       display:'flex', flexDirection:'column', gap:14,
       animation:'popIn .3s cubic-bezier(.34,1.56,.64,1)',
       position:'relative', overflow:'hidden',
     }}>
-      {/* Green accent bar */}
-      <div style={{ position:'absolute', top:0, left:0, right:0, height:4, background:'var(--sti-green)' }} />
+      {/* Blue accent bar */}
+      <div style={{ position:'absolute', top:0, left:0, right:0, height:4, background:'var(--sti-blue)' }} />
 
       {/* Faculty info */}
       <div style={{ display:'flex', alignItems:'center', gap:12 }}>
@@ -70,7 +70,7 @@ function PageAlert({ entry, onAcknowledge, onDone }) {
           <div style={{ fontWeight:800, fontSize:'1rem', color:'var(--sti-dark)' }}>{entry.faculty_name}</div>
           <div style={{ fontSize:'.78rem', color:'var(--gray-500)' }}>{entry.department_name}</div>
         </div>
-        <span style={{ marginLeft:'auto', fontWeight:800, fontSize:'1.4rem', color:'var(--sti-green)' }}>
+        <span style={{ marginLeft:'auto', fontWeight:800, fontSize:'1.4rem', color:'var(--sti-blue)' }}>
           #{entry.queue_number}
         </span>
       </div>
@@ -155,7 +155,7 @@ export default function Faculty() {
   const [faculty, setFaculty] = useState([]);   // all faculty for sidebar
   const [settings, setSettings] = useState({ sound_mode:'both' });
   const [time, setTime]       = useState(new Date());
-  const soundEnabled = useRef(true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   // ── Clock ──
   useEffect(() => {
@@ -172,25 +172,26 @@ export default function Faculty() {
 
   // ── Notification ──
   const notify = useCallback((entry) => {
+    if (!soundEnabled) return;
+
     const mode = settings.sound_mode;
-    if ((mode === 'chime' || mode === 'both') && soundEnabled.current) playChime();
+
+    if (mode === 'chime' || mode === 'both') {
+      playChime();
+    }
+
     if (mode === 'tts' || mode === 'both') {
       const msg = `Attention, ${entry.faculty_name}. A student is waiting for you. ${entry.student_name}, ${entry.purpose}.`;
       speak(msg);
     }
-    // Browser notification
+
     if (Notification.permission === 'granted') {
       new Notification(`📣 Page for ${entry.faculty_name}`, {
         body: `${entry.student_name} — ${entry.purpose}`,
         icon: '/favicon.ico',
       });
     }
-  }, [settings]);
-
-  // ── Request notification permission ──
-  useEffect(() => {
-    if (Notification.permission === 'default') Notification.requestPermission();
-  }, []);
+  }, [settings.sound_mode, soundEnabled]);
 
   // ── Socket.io ──
   useEffect(() => {
@@ -261,7 +262,7 @@ export default function Faculty() {
       {/* ── Left: Active Alerts ── */}
       <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
         {/* Header */}
-        <div style={{ background:'var(--sti-green)', padding:'16px 24px', display:'flex', alignItems:'center', gap:14, flexShrink:0 }}>
+        <div style={{ background:'var(--sti-blue)', padding:'16px 24px', display:'flex', alignItems:'center', gap:14, flexShrink:0 }}>
           <STILogo size={40} />
           <div style={{ color:'#fff' }}>
             <div style={{ fontWeight:800, fontSize:'1.1rem' }}>Faculty Room Display</div>
@@ -301,10 +302,10 @@ export default function Faculty() {
         <div style={{ background:'#fff', borderTop:'1px solid var(--gray-200)', padding:'10px 20px', display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
           <span style={{ fontSize:'.82rem', color:'var(--gray-500)', fontWeight:500 }}>Sound:</span>
           <button
-            onClick={() => { soundEnabled.current = !soundEnabled.current; }}
+            onClick={() => setSoundEnabled(prev => !prev)}
             style={{ padding:'4px 14px', borderRadius:99, fontSize:'.8rem', fontWeight:600, border:'1.5px solid var(--gray-200)', background:'var(--gray-50)', cursor:'pointer' }}
           >
-            🔊 Toggle Sound
+            {soundEnabled ? '🔊 Sound On' : '🔇 Sound Off'}
           </button>
           <span style={{ fontSize:'.75rem', color:'var(--gray-400)', marginLeft:'auto' }}>
             Mode: <strong>{settings.sound_mode}</strong>

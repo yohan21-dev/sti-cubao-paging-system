@@ -227,7 +227,7 @@ function DashboardTab({ token }) {
   }, [token]);
 
   const cards = stats ? [
-    { label:'Pages Today',    value: stats.total,     color:'var(--sti-green)',  icon:'📣' },
+    { label:'Pages Today',    value: stats.total,     color:'var(--sti-blue)',  icon:'📣' },
     { label:'Completed',      value: stats.done,      color:'var(--blue)',       icon:'✅' },
     { label:'Cancelled',      value: stats.cancelled, color:'var(--red)',        icon:'❌' },
     { label:'Currently Active', value: stats.waiting, color:'var(--amber)',      icon:'⏳' },
@@ -363,8 +363,13 @@ function DepartmentsTab({ token }) {
   const [confirm, setConfirm] = useState(null);
   const { show, ToastContainer } = useToast();
 
-  const load = () => api.getAllDepartments(token).then(setDepts).catch(() => {});
-  useEffect(load, [token]); // eslint-disable-line
+  const load = () => {
+    api.getAllDepartments(token).then(setDepts).catch(() => {});
+  };
+
+  useEffect(() => {
+    load();
+  }, [token]);
 
   async function toggleActive(d) {
     try {
@@ -552,8 +557,13 @@ function UsersTab({ token }) {
   const { user: me }        = useAuth();
   const { show, ToastContainer } = useToast();
 
-  const load = () => api.getAdminUsers(token).then(setUsers).catch(() => {});
-  useEffect(load, [token]); // eslint-disable-line
+  const load = () => {
+    api.getAdminUsers(token).then(setUsers).catch(() => {});
+  };
+
+  useEffect(() => {
+    load();
+  }, [token]);
 
   async function handleDelete(u) {
     try { await api.deleteAdminUser(u.id, token); load(); show('User deleted', 'success'); }
@@ -621,14 +631,17 @@ export default function Admin() {
     navigate('/admin/login');
   }
 
-  const tabContent = {
-    dashboard:   <DashboardTab   token={token} />,
-    faculty:     <FacultyTab     token={token} />,
-    departments: <DepartmentsTab token={token} />,
-    logs:        <LogsTab        token={token} />,
-    settings:    <SettingsTab    token={token} />,
-    users:       <UsersTab       token={token} />,
-  };
+  function renderTab() {
+    switch (tab) {
+      case 'dashboard':   return <DashboardTab token={token} />;
+      case 'faculty':     return <FacultyTab token={token} />;
+      case 'departments': return <DepartmentsTab token={token} />;
+      case 'logs':        return <LogsTab token={token} />;
+      case 'settings':    return <SettingsTab token={token} />;
+      case 'users':       return <UsersTab token={token} />;
+      default: return null;
+    }
+  }
 
   return (
     <div style={{ display:'flex', height:'100vh', overflow:'hidden' }}>
@@ -669,7 +682,7 @@ export default function Admin() {
 
       {/* Main content */}
       <main style={{ flex:1, overflowY:'auto', background:'var(--gray-100)', padding:28 }}>
-        {tabContent[tab]}
+        {renderTab()}
       </main>
     </div>
   );

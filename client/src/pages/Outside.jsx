@@ -22,7 +22,7 @@ function StepBar({ step }) {
             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, minWidth:64 }}>
               <div style={{
                 width:32, height:32, borderRadius:'50%',
-                background: done ? 'var(--sti-green)' : active ? 'var(--sti-yellow)' : 'var(--gray-200)',
+                background: done ? 'var(--sti-blue)' : active ? 'var(--sti-yellow)' : 'var(--gray-200)',
                 color: done ? '#fff' : active ? 'var(--sti-dark)' : 'var(--gray-500)',
                 display:'flex', alignItems:'center', justifyContent:'center',
                 fontWeight:700, fontSize:'.85rem',
@@ -30,12 +30,12 @@ function StepBar({ step }) {
               }}>
                 {done ? '✓' : i + 1}
               </div>
-              <span style={{ fontSize:'.72rem', fontWeight:600, color: active ? 'var(--sti-green)' : 'var(--gray-500)', whiteSpace:'nowrap' }}>
+              <span style={{ fontSize:'.72rem', fontWeight:600, color: active ? 'var(--sti-blue)' : 'var(--gray-500)', whiteSpace:'nowrap' }}>
                 {label}
               </span>
             </div>
             {i < STEPS.length - 1 && (
-              <div style={{ flex:1, height:2, background: done ? 'var(--sti-green)' : 'var(--gray-200)', margin:'0 4px', marginBottom:20, transition:'background .2s' }} />
+              <div style={{ flex:1, height:2, background: done ? 'var(--sti-blue)' : 'var(--gray-200)', margin:'0 4px', marginBottom:20, transition:'background .2s' }} />
             )}
           </div>
         );
@@ -50,7 +50,7 @@ function IdleBar({ seconds, total }) {
   return (
     <div style={{ position:'fixed', bottom:0, left:0, right:0 }}>
       <div style={{ height:4, background:'var(--gray-200)' }}>
-        <div style={{ height:4, background:'var(--sti-green)', width:`${100 - pct}%`, transition:'width 1s linear' }} />
+        <div style={{ height:4, background:'var(--sti-blue)', width:`${100 - pct}%`, transition:'width 1s linear' }} />
       </div>
       <div style={{ background:'var(--gray-50)', padding:'8px 0', textAlign:'center', fontSize:'.8rem', color:'var(--gray-500)' }}>
         Screen resets in <strong>{Math.ceil((IDLE_TIMEOUT - pct / 100 * IDLE_TIMEOUT) / 1000)}s</strong> due to inactivity
@@ -246,7 +246,12 @@ export default function Outside() {
   // ── Render ──
   return (
     <div
-      style={{ minHeight:'100vh', background:'linear-gradient(135deg, #003320 0%, #006837 60%, #1a8a50 100%)', display:'flex', flexDirection:'column' }}
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #062f52 0%, #0b5793 60%, #4da3e0 100%)',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
       onMouseMove={resetIdle} onKeyDown={resetIdle} onTouchStart={resetIdle}
     >
       <ToastContainer />
@@ -287,7 +292,7 @@ export default function Outside() {
                           color:'var(--sti-dark)', cursor:'pointer', textAlign:'left',
                           transition:'all .15s',
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor='var(--sti-green)'; e.currentTarget.style.background='var(--sti-light)'; }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor='var(--sti-blue)'; e.currentTarget.style.background='var(--sti-light)'; }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor='var(--gray-200)'; e.currentTarget.style.background='var(--gray-50)'; }}
                       >
                         <div style={{ fontSize:28, marginBottom:8 }}>🏫</div>
@@ -330,7 +335,7 @@ export default function Outside() {
                               display:'flex', flexDirection:'column', alignItems:'center', gap:10,
                               transition:'all .15s',
                             }}
-                            onMouseEnter={e => { if (!unavail) { e.currentTarget.style.borderColor='var(--sti-green)'; e.currentTarget.style.transform='translateY(-2px)'; } }}
+                            onMouseEnter={e => { if (!unavail) { e.currentTarget.style.borderColor='var(--sti-blue)'; e.currentTarget.style.transform='translateY(-2px)'; } }}
                             onMouseLeave={e => { e.currentTarget.style.borderColor='var(--gray-200)'; e.currentTarget.style.transform='none'; }}
                           >
                             <FacultyAvatar photo={f.photo} name={f.name} size={64} />
@@ -373,7 +378,7 @@ export default function Outside() {
                     </div>
                     <div className="form-group">
                       <label className="form-label">Student ID <span style={{ color:'var(--gray-400)' }}>(optional)</span></label>
-                      <input className="form-input" placeholder="e.g. 2023-12345"
+                      <input className="form-input" placeholder="e.g. 02000******"
                         value={form.student_id}
                         onChange={e => setForm(f => ({ ...f, student_id: e.target.value }))}
                       />
