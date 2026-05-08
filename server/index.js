@@ -5,7 +5,7 @@ const { Server } = require('socket.io');
 const cors      = require('cors');
 const path      = require('path');
 
-const { settingsRouter } = require('./routes/settings');
+const settingsRouter = require('./routes/settings');
 
 const app    = express();
 const server = http.createServer(app);
@@ -16,10 +16,13 @@ const io = new Server(server, {
 });
 
 app.use(cors({ origin: process.env.CLIENT_URL || '*' }));
-app.use(express.json());
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.set('io', io);  // ← THIS is the critical missing line
+app.set('io', io);
 
 app.use('/api/auth',        require('./routes/auth'));
 app.use('/api/departments', require('./routes/departments'));
@@ -27,6 +30,8 @@ app.use('/api/faculty',     require('./routes/faculty'));
 app.use('/api/queue',       require('./routes/queue'));
 app.use('/api/settings',    settingsRouter);
 app.use('/api/admin',       require('./routes/admin'));
+app.use('/api/schedules',   require('./routes/schedules'));
+app.use('/api/students',    require('./routes/students'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 

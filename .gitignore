@@ -1,5 +1,5 @@
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,21 +7,48 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+client-dist/
+build/
+
+# Local environment files
+.env
+.env.*
+!.env.example
 *.local
+
+# Uploaded/runtime files
+uploads/
+photos/
+server/uploads/
+server/photos/
+public/uploads/
+
+# Database files / backups
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.dump
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-.env
-.env.production
+# Certificates / private keys
+*.pem
+*.key
+*.crt

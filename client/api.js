@@ -68,4 +68,17 @@ export const api = {
   createAdminUser:     (b,tok)    => request('POST','/admin/users', b, tok),
   updateAdminPassword: (id,b,tok) => request('PUT', `/admin/users/${id}/password`, b, tok),
   deleteAdminUser:     (id,tok)   => request('DELETE',`/admin/users/${id}`, null, tok),
+
+  // Schedules
+  getSchedulesByFaculty:  (id,tok)      => request('GET', `/schedules/faculty/${id}`, null, tok),
+  getFacultyTodaySchedule:(id)          => request('GET', `/schedules/faculty/${id}/today`),
+  getAllSchedules:         (tok)         => request('GET', `/schedules/all`, null, tok),
+  createSchedule:         (b,tok)       => request('POST','/schedules', b, tok),
+  bulkCreateSchedules:    (b,tok)       => request('POST','/schedules/bulk', b, tok),
+  updateSchedule:         (id,b,tok)    => request('PUT', `/schedules/${id}`, b, tok),
+  deleteSchedule:         (id,tok)      => request('DELETE',`/schedules/${id}`, null, tok),
+  clearFacultySchedules:  (id,tok)      => request('DELETE',`/schedules/faculty/${id}/all`, null, tok),
+ 
+  // Student lookup
+  lookupStudent: (studentNumber) => request('GET', `/students/${encodeURIComponent(studentNumber)}`),
 };

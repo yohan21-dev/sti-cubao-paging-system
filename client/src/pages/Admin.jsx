@@ -5,11 +5,13 @@ import { useAuth } from '../components/AuthContext.jsx';
 import { useToast } from '../components/useToast.jsx';
 import FacultyAvatar from '../components/FacultyAvatar.jsx';
 import STILogo from '../components/STILogo.jsx';
+import SchedulesTab from './AdminSchedules.jsx';
 
 const TABS = [
   { key:'dashboard',   label:'📊 Dashboard' },
   { key:'faculty',     label:'👨‍🏫 Faculty' },
   { key:'departments', label:'🏫 Departments' },
+  { key:'schedules',   label:'🗓️ Schedules' },
   { key:'logs',        label:'📋 Logs' },
   { key:'settings',    label:'⚙️ Settings' },
   { key:'users',       label:'👥 Admin Users' },
@@ -261,7 +263,7 @@ function DashboardTab({ token }) {
 function FacultyTab({ token }) {
   const [faculty, setFaculty]       = useState([]);
   const [departments, setDepts]     = useState([]);
-  const [modal, setModal]           = useState(null); // null | 'add' | faculty obj
+  const [modal, setModal]           = useState(null);
   const [confirm, setConfirm]       = useState(null);
   const [filterDept, setFilterDept] = useState('all');
   const [search, setSearch]         = useState('');
@@ -363,13 +365,8 @@ function DepartmentsTab({ token }) {
   const [confirm, setConfirm] = useState(null);
   const { show, ToastContainer } = useToast();
 
-  const load = () => {
-    api.getAllDepartments(token).then(setDepts).catch(() => {});
-  };
-
-  useEffect(() => {
-    load();
-  }, [token]);
+  const load = () => { api.getAllDepartments(token).then(setDepts).catch(() => {}); };
+  useEffect(() => { load(); }, [token]);
 
   async function toggleActive(d) {
     try {
@@ -408,17 +405,11 @@ function DepartmentsTab({ token }) {
             {depts.map(d => (
               <tr key={d.id}>
                 <td style={{ fontWeight:600 }}>{d.name}</td>
-                <td>
-                  <span className={`badge ${d.active ? 'badge-green' : 'badge-gray'}`}>
-                    {d.active ? 'Active' : 'Hidden'}
-                  </span>
-                </td>
+                <td><span className={`badge ${d.active ? 'badge-green' : 'badge-gray'}`}>{d.active ? 'Active' : 'Hidden'}</span></td>
                 <td style={{ textAlign:'right' }}>
                   <div style={{ display:'flex', gap:6, justifyContent:'flex-end' }}>
                     <button className="btn btn-secondary btn-sm" onClick={() => setModal(d)}>Edit</button>
-                    <button className="btn btn-warning btn-sm" onClick={() => toggleActive(d)}>
-                      {d.active ? 'Hide' : 'Show'}
-                    </button>
+                    <button className="btn btn-warning btn-sm" onClick={() => toggleActive(d)}>{d.active ? 'Hide' : 'Show'}</button>
                     <button className="btn btn-danger btn-sm" onClick={() => setConfirm(d)}>Delete</button>
                   </div>
                 </td>
@@ -433,16 +424,14 @@ function DepartmentsTab({ token }) {
 
 // ── Logs Tab ───────────────────────────────────────────────────
 function LogsTab({ token }) {
-  const [logs, setLogs]     = useState([]);
-  const [date, setDate]     = useState(new Date().toISOString().split('T')[0]);
+  const [logs, setLogs]       = useState([]);
+  const [date, setDate]       = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
 
   async function load() {
     setLoading(true);
-    try {
-      const data = await api.getLogs({ date }, token);
-      setLogs(data);
-    } catch {}
+    try { const data = await api.getLogs({ date }, token); setLogs(data); }
+    catch {}
     setLoading(false);
   }
   useEffect(() => { load(); }, [date]); // eslint-disable-line
@@ -557,13 +546,8 @@ function UsersTab({ token }) {
   const { user: me }        = useAuth();
   const { show, ToastContainer } = useToast();
 
-  const load = () => {
-    api.getAdminUsers(token).then(setUsers).catch(() => {});
-  };
-
-  useEffect(() => {
-    load();
-  }, [token]);
+  const load = () => { api.getAdminUsers(token).then(setUsers).catch(() => {}); };
+  useEffect(() => { load(); }, [token]);
 
   async function handleDelete(u) {
     try { await api.deleteAdminUser(u.id, token); load(); show('User deleted', 'success'); }
@@ -626,16 +610,14 @@ export default function Admin() {
   const { token, user, logout } = useAuth();
   const navigate = useNavigate();
 
-  function handleLogout() {
-    logout();
-    navigate('/admin/login');
-  }
+  function handleLogout() { logout(); navigate('/admin/login'); }
 
   function renderTab() {
     switch (tab) {
       case 'dashboard':   return <DashboardTab token={token} />;
       case 'faculty':     return <FacultyTab token={token} />;
       case 'departments': return <DepartmentsTab token={token} />;
+      case 'schedules':   return <SchedulesTab token={token} />;
       case 'logs':        return <LogsTab token={token} />;
       case 'settings':    return <SettingsTab token={token} />;
       case 'users':       return <UsersTab token={token} />;
@@ -645,7 +627,6 @@ export default function Admin() {
 
   return (
     <div style={{ display:'flex', height:'100vh', overflow:'hidden' }}>
-      {/* Sidebar */}
       <aside style={{ width:220, background:'var(--sti-dark)', display:'flex', flexDirection:'column', flexShrink:0 }}>
         <div style={{ padding:'20px 16px 16px', borderBottom:'1px solid rgba(255,255,255,.1)' }}>
           <STILogo size={40} />
@@ -680,7 +661,6 @@ export default function Admin() {
         </div>
       </aside>
 
-      {/* Main content */}
       <main style={{ flex:1, overflowY:'auto', background:'var(--gray-100)', padding:28 }}>
         {renderTab()}
       </main>
